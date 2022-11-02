@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Science 4: BikeShare Toronto</title>
+    <style>
+      table, td, th {
+        border: 1px solid;
+      }
+    </style>
+    <script type="text/javascript">
+        var updateTable = (response) => {
+          console.table(response);
+          var table = document.getElementById('datatable');
+          var tableBody = table.querySelector('tbody');
+          var rows = response.map(entry => {
+            // Create a new row element
+            var row = document.createElement('tr');
+
+            var name = document.createElement('td');
+            name.appendChild(document.createTextNode(entry["name"]));
+            row.appendChild(name);
+
+            var time = document.createElement('td');
+            time.appendChild(document.createTextNode(entry["Time (mins)"]));
+            row.appendChild(time);
+
+            var distance_start_to_station = document.createElement('td');
+            distance_start_to_station.appendChild(document.createTextNode(entry["Distance from Start to Station (KM)"]));
+            row.appendChild(distance_start_to_station);
+
+            var distance_station_to_end = document.createElement('td');
+            distance_station_to_end.appendChild(document.createTextNode(entry["Distance from Station to End (KM)"]));
+            row.appendChild(distance_station_to_end);
+
+            var num_bikes_available = document.createElement('td');
+            num_bikes_available.appendChild(document.createTextNode(entry["num_bikes_available"]));
+            row.appendChild(num_bikes_available);
+
+            var num_docks_available = document.createElement('td');
+            num_docks_available.appendChild(document.createTextNode(entry["num_docks_available"]));
+            row.appendChild(num_docks_available);
+
+            return row;
+          })
+          tableBody.replaceChildren(...rows);
+        };
+
+        // define the callAPI function
+        var callAPI = (start_pc,end_pc,membership)=>
+		{
+            // instantiate a headers object
+            var myHeaders = new Headers();
+            // add content type header to object
+            myHeaders.append("Content-Type", "application/json");
+            // using built in JSON utility package turn object to string and store in a variable
+            var raw = JSON.stringify({"start_pc":start_pc,"end_pc":end_pc,"membership":membership});
+            // create a JSON object with parameters for API call and store in a variable
+            var requestOptions = 
+			{
+                method: 'POST',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
+            // make API call with parameters and use promises to get response
+            fetch("https://gwo01ufca9.execute-api.us-east-1.amazonaws.com/dev/", requestOptions)
+            .then(response => response.json())
+            .then(result => JSON.parse(result.body))
+            .then(result => updateTable(result))
+            .catch(error => console.log('error', error));
+		}	
+    </script>
+</head>
+
+<h1>Welcome to our Serverless App</h1>
+<p id ="main">This app will help you find the BikeShare stations closest to your start and end postal codes with bikes and docks available. It will also identify the estimated time from start to finish using an ML model based on previous BikeShare trips.</p>
+<h2>Please enter your postal code for start and end below as well as your BikeShare Toronto membership status (casual or annual member)</h2>
+
+<form>
+  <label for="start_pc">Starting Postal Code:(no spaces)</label><br>
+  <input type="text" id="start_pc" name="start_pc" value=""><br>
+  <label for="end_pc">Ending Postal Code: (no spaces)</label><br>
+  <input type="text" id="end_pc" name="end_pc" value=""><br>
+  <br>
+  <label for="membership">Select a membership type:</label><br><br>
+  <select id="membership" name="membership">
+    <option value="annual">Annual</option>
+    <option value="casual">Casual</option>
+	</select><br><br><br>
+  <button type="button" onclick="callAPI(document.getElementById('start_pc').value,document.getElementById('end_pc').value,document.getElementById('membership').value)">Submit</button>
+</form> <br>
+
+<h2>Please see table below for top 3 nearest stations to your start and end postal codes provided</h2>
+
+<table id="datatable" style="border: 1px solid">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Time (mins)</th>
+      <th>Distance from start to station (km)</th>
+      <th>Distance from station to end (km)</th>
+      <th>Number of bikes available</th>
+      <th>Number of docks available</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Please see weather below for your area</h2>
+<!-- Begin WeatherLink Fragment -->
+<iframe title="Environment Canada Weather" width="287px" height="191px" src="https://weather.gc.ca/wxlink/wxlink.html?cityCode=on-143&amp;lang=e" allowtransparency="true" frameborder="0"></iframe>
+<!-- End WeatherLink Fragment -->
+</body>
+</html>
